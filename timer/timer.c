@@ -123,10 +123,7 @@ struct seria_time *get_serail_time(struct seria_time *time)
 {
 	struct tm tm;
 
-	if (NULL == time)
-	{
-		return NULL;
-	}
+	if (NULL == time) { return NULL; }
 
 	getostime_format(&tm);
 
