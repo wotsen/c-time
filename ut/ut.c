@@ -52,6 +52,8 @@ static void test_getostimestr(void **state)
 	assert_true(strlen(str));
 
 	printf("%s\n", str);
+
+	assert_false(getostimestr(NULL));
 }
 
 static void test_getostime_format(void **state)
@@ -60,6 +62,8 @@ static void test_getostime_format(void **state)
 
 	assert_true(getostime_format(&tm));
 	assert_true(tm);
+
+	assert_false(getostime_format(NULL));
 }
 
 static void test_get_serail_time(void **state)
@@ -69,6 +73,8 @@ static void test_get_serail_time(void **state)
 	memset(&time, 0, sizeof(time));
 
 	assert_true(get_serail_time(&time));
+
+	assert_false(get_serail_time(NULL));
 }
 
 void ut_run(void)
