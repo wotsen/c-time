@@ -1,6 +1,8 @@
-#ifndef __TIMER_H__
-#define __TIMER_H__
+#ifndef __UTIL_TIME_H__
+#define __UTIL_TIME_H__
 #include <inttypes.h>
+#include <stdbool.h>
+#include <time.h>
 
 #if defined(ZH_CN)
 #define LANGUAGE_ZH
@@ -32,11 +34,11 @@ struct seria_time
 uint32_t getostime(void); 						/* 获取系统时间,返回秒数 */
 void ostime_delay(uint32_t tick); 				/* 指定系统延时 */
 void print_ostime(void); 						/* 打印时间 */
-char *getostimestr(char *str); 					/* 获取时间字符串 */
-struct tm *getostime_format(struct tm *tm); 	/* 获取格式化时间 */
-struct seria_time *get_serail_time(struct seria_time *time); // 相对1900年修正过的时间
+bool getostimestr(char *str); 					/* 获取时间字符串 */
+bool getostime_format(struct tm **tm); 			/* 获取格式化时间 */
+bool get_serail_time(struct seria_time *time); // 相对1900年修正过的时间
 
 void print_monthly(uint8_t month); 				/* 打印一个月的月历 */
 void print_calendar(uint16_t year); 			/* 打印一年的年历 */
 
-#endif // endof : #ifndef __TIMER_H__
+#endif // endof : #ifndef __UTIL_TIME_H__

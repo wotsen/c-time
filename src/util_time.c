@@ -1,13 +1,12 @@
 #include <stdio.h>
-#include <time.h>
 #include <pthread.h>    /* -lpthread */
 
 #include <sys/types.h>
 #include <sys/time.h>
 
-#include "timer.h"
+#include "util_time.h"
 
-static char *s_time_strformat(struct tm *tm, char *str);
+static bool s_time_strformat(const struct tm *tm, char *str);
 
 static pthread_mutex_t s_time_lock = PTHREAD_MUTEX_INITIALIZER;			/* 时间读取锁 */
 
@@ -22,7 +21,7 @@ static pthread_mutex_t s_time_lock = PTHREAD_MUTEX_INITIALIZER;			/* 时间读�
 /**
  * [getostime description] : 获取的是时间,微秒级别
  * @method getostime
- * @return           当前秒数
+ * @return           当前秒数(微秒)
  */
 uint32_t getostime(void)
 {
@@ -59,20 +58,20 @@ void ostime_delay(uint32_t tick)
  * @param  tm               [out] : 格式化时间
  * @return                  [out] : 格式化时间 NULL-错误 not NULL-正常
  */
-struct tm *getostime_format(struct tm *tm)
+bool getostime_format(struct tm **tm)
 {
-	time_t sec;
+	time_t sec = 0;
 
-	if (!tm) { return NULL; }
+	if (!tm) { return false; }
 
 	if ((sec = time(NULL)) < 0)
 	{
-		return NULL;
+		return false;
 	}
 
-	tm = localtime(&sec);
+	*tm = localtime(&sec);
 
-	return tm;
+	return *tm ? true : false;
 }
 
 /**
@@ -82,9 +81,9 @@ struct tm *getostime_format(struct tm *tm)
  * @param  str              [out]   : 格式化字符串
  * @return                  [out]   : 格式化字符串 NULL-出错 not NULL-成功
  */
-static char *s_time_strformat(struct tm *tm, char *str)
+static bool s_time_strformat(const struct tm *tm, char *str)
 {
-    if (!tm || !str) { return NULL; }
+    if (!tm || !str) { return false; }
 
 	sprintf((char *)str, TIME_FORMAT, \
 			tm->tm_year + 1900, \
@@ -95,7 +94,7 @@ static char *s_time_strformat(struct tm *tm, char *str)
 			tm->tm_min, \
 			tm->tm_sec);
 
-    return str;
+    return true;
 }
 
 /**
@@ -104,13 +103,15 @@ static char *s_time_strformat(struct tm *tm, char *str)
  * @param  str          [out] 	: 当前时间字符串
  * @return              [out]   : NULL-出错 not NULL-成功
  */
-char *getostimestr(char *str)
+bool getostimestr(char *str)
 {
-	struct tm tm;
+	struct tm *tm = NULL;
 
-	if (!str) { return NULL; }
+	if (!str) { return false; }
 
-    return s_time_strformat(getostime_format(&tm), str);
+	if (!getostime_format(&tm)) { return false; }
+
+    return s_time_strformat(tm, str);
 }
 
 /**
@@ -119,25 +120,25 @@ char *getostimestr(char *str)
  * @param  time            [description]
  * @return                 [description]
  */
-struct seria_time *get_serail_time(struct seria_time *time)
+bool get_serail_time(struct seria_time *time)
 {
-	struct tm tm;
+	struct tm *tm = NULL;
 
-	if (NULL == time) { return NULL; }
+	if (!time) { return false; }
 
-	getostime_format(&tm);
+	if (!getostime_format(&tm)) { return false; }
 
-	sprintf(time->tm_zone, "%s", tm.tm_zone);
-	time->cur_days = tm.tm_yday;
-	time->year = tm.tm_year + 1900;
-	time->month = tm.tm_mon + 1;
-	time->day = tm.tm_mday;
-	sprintf(time->week, "%s", _wday[tm.tm_wday]);
-	time->hour = tm.tm_hour;
-	time->min = tm.tm_min;
-	time->sec = tm.tm_sec;
+	sprintf(time->tm_zone, "%s", tm->tm_zone);
+	time->cur_days = tm->tm_yday;
+	time->year = tm->tm_year + 1900;
+	time->month = tm->tm_mon + 1;
+	time->day = tm->tm_mday;
+	sprintf(time->week, "%s", _wday[tm->tm_wday]);
+	time->hour = tm->tm_hour;
+	time->min = tm->tm_min;
+	time->sec = tm->tm_sec;
 
-	return time;
+	return true;
 }
 
  /**
@@ -146,8 +147,15 @@ struct seria_time *get_serail_time(struct seria_time *time)
   */
 void print_ostime(void)
 {
-    char str[1024];
-    printf("%s\n", getostimestr(str));
+    char str[128];
+	if (!getostimestr(str))
+	{
+		printf("none time\n");
+	}
+	else
+	{
+		printf("%s\n", str);
+	}
 }
 
 /* 打印一个月的月历 */
